@@ -1,12 +1,12 @@
 # Firebase AppCheck Attestation Token Generator
 
 ## Installation and setup
-Clone repo
-Create firebase-config folder
-Generate new private key in Firebase Console
-Add private key file to firebase-config folder
-Get Firebase app id from Firebase Console
-Add private key file name and Firebase app id to compose.yaml
+- Clone repo
+- Create firebase-config folder
+- Generate new private key in Firebase Console
+- Add private key file to firebase-config folder
+- Get Firebase app id from Firebase Console
+- Add private key file name and Firebase app id to compose.yaml
 
 ## Implementation Strategy
 
@@ -307,31 +307,40 @@ The monitoring examples with `watch` and conditional refresh based on token coun
 
 # Running in AWS Fargate
 
-AWS Fargate Deployment Guide
+## AWS Fargate Deployment Guide
 This guide walks through deploying your Express.js application to AWS Fargate using ECS.
 Prerequisites
 
-AWS CLI configured with appropriate permissions
-Docker installed locally
-An AWS account with ECR, ECS, and VPC permissions
+- AWS CLI configured with appropriate permissions
+- Docker installed locally
+- An AWS account with ECR, ECS, and VPC permissions
 
-Step 1: Build and Push Docker Image
-bash# Create ECR repository
+### Step 1: Build and Push Docker Image
+Create ECR repository
+```bash
 aws ecr create-repository --repository-name fargate-express-app --region eu-west-2
+```
 
 # Get login token
+```bash
 aws ecr get-login-password --region eu-west-2 | docker login --username AWS --password-stdin <account-id>.dkr.ecr.eu-west-2.amazonaws.com
+```
 
 # Build image
+```bash
 docker build -t fargate-express-app .
+```
 
 # Tag image
+```bash
 docker tag fargate-express-app:latest <account-id>.dkr.ecr.eu-west-2.amazonaws.com/fargate-express-app:latest
-
+```
 # Push image
+```bash
 docker push <account-id>.dkr.ecr.eu-west-2.amazonaws.com/fargate-express-app:latest
+```
 
-Step 2: Create ECS Task Definition
+### Step 2: Create ECS Task Definition
 Create task-definition.json:
 ```json
 {
@@ -387,17 +396,17 @@ Register the task definition:
 aws ecs register-task-definition --cli-input-json file://task-definition.json
 ```
 
-Step 3: Create CloudWatch Log Group
+### Step 3: Create CloudWatch Log Group
 ```bash
 aws logs create-log-group --log-group-name /ecs/fargate-express-app --region us-east-1
 ```
 
-Step 4: Create ECS Cluster
+### Step 4: Create ECS Cluster
 ```bash
 aws ecs create-cluster --cluster-name fargate-express-cluster --capacity-providers FARGATE --default-capacity-provider-strategy capacityProvider=FARGATE,weight=1
 ```
 
-Step 5: Create Security Group
+### Step 5: Create Security Group
 ```bash
 aws ec2 create-security-group \
   --group-name fargate-express-sg \
@@ -405,7 +414,7 @@ aws ec2 create-security-group \
   --vpc-id <your-vpc-id>
 ```
 
-# Add inbound rule for port 3000
+Add inbound rule for port 3000
 ```bash
 aws ec2 authorize-security-group-ingress \
   --group-id <security-group-id> \
@@ -414,7 +423,7 @@ aws ec2 authorize-security-group-ingress \
   --cidr 0.0.0.0/0
 ```
 
-Step 6: Create ECS Service
+### Step 6: Create ECS Service
 Create service-definition.json:
 ```json
 {
@@ -445,7 +454,7 @@ Create the service:
 aws ecs create-service --cli-input-json file://service-definition.json
 ```
 
-Step 7: Create Application Load Balancer (Optional)
+### Step 7: Create Application Load Balancer (Optional)
 ```bash
 aws elbv2 create-load-balancer \
   --name fargate-express-alb \
@@ -453,7 +462,7 @@ aws elbv2 create-load-balancer \
   --security-groups sg-12345
 ```
 
-# Create target group
+Create target group
 ```bash
 aws elbv2 create-target-group \
   --name fargate-express-tg \
@@ -464,7 +473,7 @@ aws elbv2 create-target-group \
   --health-check-path /health
 ```
 
-# Create listener
+Create listener
 ```bash
 aws elbv2 create-listener \
   --load-balancer-arn <alb-arn> \
@@ -511,19 +520,19 @@ aws ecs update-service \
 
 ## Cost Optimization
 
-Use Fargate Spot for non-production workloads
-Set appropriate CPU/memory limits
-Consider using ARM-based instances (Graviton2)
-Implement auto-scaling based on metrics
+- Use Fargate Spot for non-production workloads
+- Set appropriate CPU/memory limits
+- Consider using ARM-based instances (Graviton2)
+- Implement auto-scaling based on metrics
 
 ## Security Best Practices
 
-Use IAM roles for task execution and task roles
-Store secrets in AWS Secrets Manager or Parameter Store
-Use VPC endpoints to avoid internet traffic
-Enable VPC Flow Logs for network monitoring
-Use security groups to restrict access
-Regularly update base images and dependencies
+- Use IAM roles for task execution and task roles
+- Store secrets in AWS Secrets Manager or Parameter Store
+- Use VPC endpoints to avoid internet traffic
+- Enable VPC Flow Logs for network monitoring
+- Use security groups to restrict access
+- Regularly update base images and dependencies
 
 ## Troubleshooting
 
