@@ -67,97 +67,124 @@ This approach allows you to run extended load tests while properly managing App 
 # =============================================================================
 
 # Generate 10 tokens with default 30-minute TTL
+```bash
 curl -X POST http://localhost:3000/refresh-tokens \
   -H "Content-Type: application/json" \
   -d '{}'
+```
 
 # Generate 20 tokens with 45-minute TTL
+```bash
 curl -X POST http://localhost:3000/refresh-tokens \
   -H "Content-Type: application/json" \
   -d '{
     "count": 20,
     "ttl": 2700
   }'
+```
 
 # Generate 5 tokens with 1-hour TTL
+```bash
 curl -X POST http://localhost:3000/refresh-tokens \
   -H "Content-Type: application/json" \
   -d '{
     "count": 5,
     "ttl": 3600
   }'
+```
 
 # =============================================================================
 # 2. PREGENERATE POOL ENDPOINT
 # =============================================================================
 
 # Generate default pool (100 tokens in batches of 10)
+```bash
 curl -X POST http://localhost:3000/pregenerate-pool \
   -H "Content-Type: application/json" \
   -d '{}'
+```
 
 # Generate large pool for extended load testing
+```bash
 curl -X POST http://localhost:3000/pregenerate-pool \
   -H "Content-Type: application/json" \
   -d '{
     "totalTokens": 500,
     "batchSize": 25
   }'
+```
 
 # Generate small test pool
+```bash
 curl -X POST http://localhost:3000/pregenerate-pool \
   -H "Content-Type: application/json" \
   -d '{
     "totalTokens": 50,
     "batchSize": 10
   }'
+```
 
 # Generate pool with custom batch size for rate limiting
+```bash
 curl -X POST http://localhost:3000/pregenerate-pool \
   -H "Content-Type: application/json" \
   -d '{
     "totalTokens": 200,
     "batchSize": 5
   }'
+```
 
 # =============================================================================
 # 3. GET TOKENS STATUS ENDPOINT
 # =============================================================================
 
 # Check current token pool status
+```bash
 curl -X GET http://localhost:3000/tokens
+```
 
 # Get token status with pretty formatting
+```bash
 curl -X GET http://localhost:3000/tokens | jq '.'
+```
 
 # Get just the count of valid tokens
+```bash
 curl -X GET http://localhost:3000/tokens | jq '.valid'
+```
 
 # =============================================================================
 # 4. TESTING YOUR PROTECTED ENDPOINT WITH TOKENS
 # =============================================================================
 
 # First, get a token from the pool
+```bash
 TOKEN=$(curl -s http://localhost:3000/tokens | jq -r '.tokens[0].token')
+```
 
 # Test your protected endpoint with the App Check token
+```bash
 curl -X GET https://your-api.com/protected-endpoint \
   -H "Content-Type: application/json" \
   -H "X-Firebase-AppCheck: $TOKEN"
+```
 
 # POST request with App Check token
+```bash
 curl -X POST https://your-api.com/protected-endpoint \
   -H "Content-Type: application/json" \
   -H "X-Firebase-AppCheck: $TOKEN" \
   -d '{
     "data": "your request payload"
   }'
+```
 
 # =============================================================================
 # 5. BATCH OPERATIONS
 # =============================================================================
 
 # Generate tokens for different test scenarios
+```bash
 echo "Generating tokens for smoke tests..."
 curl -X POST http://localhost:3000/refresh-tokens \
   -H "Content-Type: application/json" \
@@ -170,12 +197,14 @@ curl -X POST http://localhost:3000/pregenerate-pool \
 
 echo "Checking final token count..."
 curl -X GET http://localhost:3000/tokens | jq '.valid'
+```
 
 # =============================================================================
 # 6. MONITORING AND MAINTENANCE
 # =============================================================================
 
 # Monitor token expiry (run periodically)
+```bash
 curl -s http://localhost:3000/tokens | \
   jq '{
     total: .total,
@@ -183,8 +212,10 @@ curl -s http://localhost:3000/tokens | \
     expired: .expired,
     expiry_times: [.tokens[].expiresAt] | sort
   }'
+```
 
 # Refresh tokens when low (example threshold check)
+```bash
 VALID_COUNT=$(curl -s http://localhost:3000/tokens | jq '.valid')
 if [ "$VALID_COUNT" -lt 50 ]; then
   echo "Low token count ($VALID_COUNT), refreshing..."
@@ -192,29 +223,37 @@ if [ "$VALID_COUNT" -lt 50 ]; then
     -H "Content-Type: application/json" \
     -d '{"count": 100, "ttl": 1800}'
 fi
+```
 
 # =============================================================================
 # 7. ERROR HANDLING EXAMPLES
 # =============================================================================
 
 # Test with verbose output to see errors
+```bash
 curl -v -X POST http://localhost:3000/refresh-tokens \
   -H "Content-Type: application/json" \
   -d '{"count": 5}'
+```
 
 # Test with timeout for slow responses
+```bash
 curl --max-time 30 -X POST http://localhost:3000/pregenerate-pool \
   -H "Content-Type: application/json" \
   -d '{"totalTokens": 1000, "batchSize": 50}'
+```
 
 # Test with retry on failure
+```bash
 curl --retry 3 --retry-delay 5 -X GET http://localhost:3000/tokens
+```
 
 # =============================================================================
 # 8. PRODUCTION USAGE PATTERNS
 # =============================================================================
 
 # Pre-load test setup
+```bash
 echo "Setting up tokens for load test..."
 curl -X POST http://localhost:3000/pregenerate-pool \
   -H "Content-Type: application/json" \
@@ -222,15 +261,18 @@ curl -X POST http://localhost:3000/pregenerate-pool \
     "totalTokens": 1000,
     "batchSize": 20
   }' && echo "✓ Token pool ready"
+```
 
 # During test monitoring
+```bash
 watch -n 30 'curl -s http://localhost:3000/tokens | jq "{valid: .valid, expired: .expired}"'
+```
 
 # Post-test cleanup check
+```bash
 curl -s http://localhost:3000/tokens | \
   jq 'if .valid < 10 then "⚠️ Low tokens remaining" else "✓ Sufficient tokens" end'
-
-Here are comprehensive cURL commands for each endpoint of the Firebase App Check Token Generator Service. The commands are organized by use case and include examples for different scenarios you might encounter during load testing.
+```
 
 ## Quick Reference
 
@@ -289,9 +331,11 @@ docker tag fargate-express-app:latest <account-id>.dkr.ecr.eu-west-2.amazonaws.c
 
 # Push image
 docker push <account-id>.dkr.ecr.eu-west-2.amazonaws.com/fargate-express-app:latest
+
 Step 2: Create ECS Task Definition
 Create task-definition.json:
-json{
+```json
+{
   "family": "fargate-express-app",
   "networkMode": "awsvpc",
   "requiresCompatibilities": ["FARGATE"],
@@ -337,18 +381,23 @@ json{
     }
   ]
 }
+```
+
 Register the task definition:
 ```bash
 aws ecs register-task-definition --cli-input-json file://task-definition.json
 ```
+
 Step 3: Create CloudWatch Log Group
 ```bash
 aws logs create-log-group --log-group-name /ecs/fargate-express-app --region us-east-1
 ```
+
 Step 4: Create ECS Cluster
 ```bash
 aws ecs create-cluster --cluster-name fargate-express-cluster --capacity-providers FARGATE --default-capacity-provider-strategy capacityProvider=FARGATE,weight=1
 ```
+
 Step 5: Create Security Group
 ```bash
 aws ec2 create-security-group \
@@ -356,6 +405,7 @@ aws ec2 create-security-group \
   --description "Security group for Fargate Express app" \
   --vpc-id <your-vpc-id>
 ```
+
 # Add inbound rule for port 3000
 ```bash
 aws ec2 authorize-security-group-ingress \
@@ -364,10 +414,11 @@ aws ec2 authorize-security-group-ingress \
   --port 3000 \
   --cidr 0.0.0.0/0
 ```
+
 Step 6: Create ECS Service
 Create service-definition.json:
-```js
-json{
+```json
+{
   "serviceName": "fargate-express-service",
   "cluster": "fargate-express-cluster",
   "taskDefinition": "fargate-express-app",
@@ -389,10 +440,12 @@ json{
   ]
 }
 ```
+
 Create the service:
 ```bash
 aws ecs create-service --cli-input-json file://service-definition.json
 ```
+
 Step 7: Create Application Load Balancer (Optional)
 ```bash
 aws elbv2 create-load-balancer \
@@ -420,9 +473,10 @@ aws elbv2 create-listener \
   --port 80 \
   --default-actions Type=forward,TargetGroupArn=<target-group-arn>
 ```
+
 Environment Variables
 You can set environment variables in the task definition or use AWS Systems Manager Parameter Store:
-```js
+```json
 {
 "secrets": [
   {
@@ -447,6 +501,7 @@ aws ecs update-service \
   --service fargate-express-service \
   --task-definition fargate-express-app:2
 ```
+
 ### Scale service
 ```bash
 aws ecs update-service \
@@ -472,7 +527,8 @@ Use security groups to restrict access
 Regularly update base images and dependencies
 
 ## Troubleshooting
-###Check service status
+
+### Check service status
 ```bash
 aws ecs describe-services --cluster fargate-express-cluster --services fargate-express-service
 ```
@@ -487,3 +543,4 @@ aws logs tail /ecs/fargate-express-app --follow
 aws ecs list-tasks --cluster fargate-express-cluster --service-name fargate-express-service
 aws ecs describe-tasks --cluster fargate-express-cluster --tasks <task-arn>
 ```
+
