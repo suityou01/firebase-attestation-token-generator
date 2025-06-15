@@ -1,3 +1,5 @@
+# Firebase AppCheck Attestation Token Generator
+
 ## Installation and setup
 Clone repo
 Create firebase-config folder
@@ -5,9 +7,6 @@ Generate new private key in Firebase Console
 Add private key file to firebase-config folder
 Get Firebase app id from Firebase Console
 Add private key file name and Firebase app id to compose.yaml
-
-```yaml
-```
 
 ## Implementation Strategy
 
